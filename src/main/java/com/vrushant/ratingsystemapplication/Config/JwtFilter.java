@@ -44,30 +44,30 @@ public class JwtFilter extends OncePerRequestFilter {
             String role = jwtUtil.extractRole(token); // Should return "ADMIN" or "USER"
 
             if (email != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                User user = userRepo.findByEmail(email).orElse(null);
+                if (user != null) {
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
 
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            user,
 
-                        email,
+                            null,
 
-                        null,
+                            List.of(new SimpleGrantedAuthority(role))
 
-                        List.of(new SimpleGrantedAuthority( role))
-
-                );
+                    );
 
 
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    System.out.println("Authenticated user: " + email + " with role:" + role);
 
-                System.out.println("Authenticated user: " + email + " with role:" + role);
+                }
 
             }
 
+            filterChain.doFilter(request, response);
+
         }
-
-        filterChain.doFilter(request, response);
-
     }
-
 
 }

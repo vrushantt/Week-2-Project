@@ -1,9 +1,6 @@
 package com.vrushant.ratingsystemapplication.Model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -16,7 +13,8 @@ public class Rating {
     @GeneratedValue
     private Long id;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")  // foreign key column
     private User user;
 
     private int ambiance;
