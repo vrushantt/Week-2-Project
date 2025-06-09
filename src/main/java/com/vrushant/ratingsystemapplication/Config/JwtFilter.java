@@ -27,26 +27,47 @@ public class JwtFilter extends OncePerRequestFilter {
         return path.equals("/login") || path.equals("/register") || path.startsWith("/h2-console");
     }
 
-@Override
-protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-        throws ServletException, IOException {
-    String authHeader = request.getHeader("Authorization");
-    if (authHeader != null && authHeader.startsWith("Bearer ")) {
-        String token = authHeader.substring(7);
-        String email = jwtUtil.extractEmail(token);
-        String role = jwtUtil.extractRole(token); // Should return "ADMIN" or "USER"
-        if (email != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    email,
-                    null,
-                    List.of(new SimpleGrantedAuthority("ROLE_" + role))
+    @Override
 
-            );
-            System.out.println("Authenticated user: " + email + " with role: ROLE_" + role);
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 
+            throws ServletException, IOException {
+
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+
+            String token = authHeader.substring(7);
+
+            String email = jwtUtil.extractEmail(token);
+
+            String role = jwtUtil.extractRole(token); // Should return "ADMIN" or "USER"
+
+            if (email != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+
+                        email,
+
+                        null,
+
+                        List.of(new SimpleGrantedAuthority( role))
+
+                );
+
+
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                System.out.println("Authenticated user: " + email + " with role:" + role);
+
+            }
 
         }
+
+        filterChain.doFilter(request, response);
+
     }
-    filterChain.doFilter(request, response);
-}
+
+
 }
