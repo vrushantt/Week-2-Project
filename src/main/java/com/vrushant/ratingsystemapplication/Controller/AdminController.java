@@ -1,5 +1,6 @@
 package com.vrushant.ratingsystemapplication.Controller;
 
+import com.vrushant.ratingsystemapplication.Model.DTO;
 import com.vrushant.ratingsystemapplication.Model.Rating;
 import com.vrushant.ratingsystemapplication.Model.RatingRequest;
 import com.vrushant.ratingsystemapplication.Repository.RatingRepository;
@@ -31,14 +32,22 @@ public class AdminController {
     }
 
     @GetMapping("/ratings/all")
-    public ResponseEntity<List<Rating>> getAllRatings(Authentication auth) {
-        if (auth != null) {
-            System.out.println("Logged in as: " + auth.getName());
-        }
-        List<Rating> ratings = ratingRepo.findAll();
-        return ResponseEntity.ok(ratings);
+    public ResponseEntity<List<DTO>> getAllRatings(Authentication auth) {
+        List<DTO> dtos = ratingRepo.findAll().stream()
+                .map(r -> {
+                    DTO dto = new DTO();
+                    dto.setId(r.getId());
+                    dto.setUserEmail(r.getUser().getEmail());
+                    dto.setAmbiance(r.getAmbiance());
+                    dto.setFood(r.getFood());
+                    dto.setService(r.getService());
+                    dto.setCleanliness(r.getCleanliness());
+                    dto.setDrinks(r.getDrinks());
+                    return dto;
+                })
+                .toList();
+        return ResponseEntity.ok(dtos);
     }
-
     @GetMapping("/report")
     public ResponseEntity<?> report(Authentication auth) {
         if (auth != null) {

@@ -25,7 +25,7 @@ public class AuthController {
         user.setName(req.name);
         user.setEmail(req.email);
         user.setPassword(req.password); // Should hash
-        user.setRole("ROLE_USER");
+        user.setRole("USER");
         userRepo.save(user);
         return ResponseEntity.ok("Registered successfully");
     }

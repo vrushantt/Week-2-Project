@@ -1,8 +1,12 @@
 package com.vrushant.ratingsystemapplication.Model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+
+
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 
 @Entity
 @Data

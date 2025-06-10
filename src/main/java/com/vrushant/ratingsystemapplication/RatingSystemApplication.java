@@ -23,7 +23,7 @@ public class RatingSystemApplication {
                 admin.setName("Admin");
                 admin.setEmail("admin@email.com");
                 admin.setPassword("admin123"); // No hashing for simplicity
-                admin.setRole("ROLE_ADMIN");
+                admin.setRole("ADMIN");
                 userRepo.save(admin);
                 System.out.println("Admin user created: admin@email.com / admin123");
             }
