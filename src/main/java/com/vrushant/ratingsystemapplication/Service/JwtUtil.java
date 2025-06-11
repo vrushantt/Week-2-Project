@@ -16,6 +16,7 @@ public class JwtUtil {
 
     private final Key key = Keys.hmacShaKeyFor(SECRET.getBytes());
 
+    // Method to generate a JWT token
     public String generateToken(String email, String role) {
         return builder()
                 .setSubject(email)
@@ -26,6 +27,7 @@ public class JwtUtil {
                 .compact();
     }
 
+    // Method to validate a JWT token
     public Claims extractClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
@@ -34,6 +36,7 @@ public class JwtUtil {
                 .getBody();
     }
 
+    // Method to check if a JWT token is valid
     public String extractEmail(String token) {
         return extractClaims(token).getSubject();
     }

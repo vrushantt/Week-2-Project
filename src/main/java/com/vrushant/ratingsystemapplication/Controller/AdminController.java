@@ -12,68 +12,68 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
 @RestController
 @RequestMapping("/admin")
 public class AdminController {
+
     @Autowired
     private RatingRepository ratingRepo;
 
-
     @GetMapping("/ratings")
-    public ResponseEntity<?> filter(@RequestParam int ambiance, @RequestParam int food,Authentication auth) {
-        if (auth != null) {
-            System.out.println("Logged in as: " + auth.getName());
-            System.out.println("Authorities: " + auth.getAuthorities());
-        } else {
-            System.out.println("Executing /admin/ratings as an anonymous user (Authentication object is null).");
-        }
-        return ResponseEntity.ok(ratingRepo.findByAmbianceAndFood(ambiance, food));
+    public ResponseEntity<List<DTO>> filter(
+            @RequestParam(required = false) Integer ambiance,
+            @RequestParam(required = false) Integer food,
+            Authentication auth) {
+
+        System.out.println("FILTER HIT — auth=" + auth + ", params → ambiance: " + ambiance + ", food: " + food);
+
+        List<DTO> dtos = ratingRepo.findByAmbianceAndFood(
+                        ambiance != null ? ambiance : 0,
+                        food != null ? food : 0
+                ).stream()
+                .map(r -> {
+                    DTO d = new DTO();
+                    d.setId(r.getId());
+                    d.setUserEmail(r.getUser().getEmail());
+                    d.setAmbiance(r.getAmbiance());
+                    d.setFood(r.getFood());
+                    d.setService(r.getService());
+                    d.setCleanliness(r.getCleanliness());
+                    d.setDrinks(r.getDrinks());
+                    return d;
+                }).toList();
+
+        return ResponseEntity.ok(dtos);
     }
 
     @GetMapping("/ratings/all")
     public ResponseEntity<List<DTO>> getAllRatings(Authentication auth) {
+        System.out.println("ALL HIT — auth=" + auth);
         List<DTO> dtos = ratingRepo.findAll().stream()
                 .map(r -> {
-                    DTO dto = new DTO();
-                    dto.setId(r.getId());
-                    dto.setUserEmail(r.getUser().getEmail());
-                    dto.setAmbiance(r.getAmbiance());
-                    dto.setFood(r.getFood());
-                    dto.setService(r.getService());
-                    dto.setCleanliness(r.getCleanliness());
-                    dto.setDrinks(r.getDrinks());
-                    return dto;
-                })
-                .toList();
+                    DTO d = new DTO();
+                    d.setId(r.getId());
+                    d.setUserEmail(r.getUser().getEmail());
+                    d.setAmbiance(r.getAmbiance());
+                    d.setFood(r.getFood());
+                    d.setService(r.getService());
+                    d.setCleanliness(r.getCleanliness());
+                    d.setDrinks(r.getDrinks());
+                    return d;
+                }).toList();
+
         return ResponseEntity.ok(dtos);
     }
+
     @GetMapping("/report")
     public ResponseEntity<?> report(Authentication auth) {
-        if (auth != null) {
-            System.out.println("Logged in as: " + auth.getName());
-            System.out.println("Authorities: " + auth.getAuthorities());
-        } else {
-            System.out.println("Executing /admin/report as an anonymous user (Authentication object is null).");
-        }
+        System.out.println("REPORT HIT — auth=" + auth);
 
-        List<Object[]> avgList = ratingRepo.getAverageRatings();
-        Object[] avg = avgList.get(0); // only one row from AVG()
-
-        double[] avgs = new double[5];
-        for (int i = 0; i < avg.length; i++) {
-            Object o = avg[i];
-            if (o == null) {
-                avgs[i] = 0.0;
-            } else if (o instanceof Number) {
-                avgs[i] = ((Number) o).doubleValue();
-            } else {
-                avgs[i] = 0.0;
-            }
-        }
-
+        Object[] avg = ratingRepo.getAverageRatings().get(0); // safe as DB has records
+        double[] avgs = Arrays.stream(avg)
+                .mapToDouble(o -> (o instanceof Number ? ((Number) o).doubleValue() : 0.0))
+                .toArray();
         double overall = Arrays.stream(avgs).sum() / avgs.length;
-        System.out.println("Raw avg result: " + Arrays.deepToString(avgList.toArray()));
 
         return ResponseEntity.ok(Map.of(
                 "ambiance", avgs[0],

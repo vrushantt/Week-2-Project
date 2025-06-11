@@ -7,6 +7,7 @@ import com.vrushant.ratingsystemapplication.Repository.UserRepository;
 import com.vrushant.ratingsystemapplication.Service.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,6 +18,9 @@ public class AuthController {
     private UserRepository userRepo;
     @Autowired private JwtUtil jwtUtil;
 
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
         if (userRepo.findByEmail(req.email).isPresent())
@@ -24,7 +28,7 @@ public class AuthController {
         User user = new User();
         user.setName(req.name);
         user.setEmail(req.email);
-        user.setPassword(req.password); // Should hash
+        user.setPassword(passwordEncoder.encode(req.password)); // Should hash
         user.setRole("USER");
         userRepo.save(user);
         return ResponseEntity.ok("Registered successfully");
@@ -33,7 +37,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         User user = userRepo.findByEmail(req.email).orElse(null);
-        if (user == null || !user.getPassword().equals(req.password))
+        if (user == null || !passwordEncoder.matches(req.password, user.getPassword()))
             return ResponseEntity.status(401).body("Invalid credentials");
         return ResponseEntity.ok(jwtUtil.generateToken(user.getEmail(), user.getRole()));
     }
