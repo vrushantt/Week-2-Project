@@ -4,7 +4,9 @@ import com.vrushant.ratingsystemapplication.Model.DTO;
 import com.vrushant.ratingsystemapplication.Model.Rating;
 import com.vrushant.ratingsystemapplication.Model.RatingRequest;
 import com.vrushant.ratingsystemapplication.Repository.RatingRepository;
+import com.vrushant.ratingsystemapplication.Spec.RatingSpecifications;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -19,18 +21,32 @@ public class AdminController {
     @Autowired
     private RatingRepository ratingRepo;
 
-    @GetMapping("/ratings")
-    public ResponseEntity<List<DTO>> filter(
+
+    @GetMapping("/ratings/filter")
+    public ResponseEntity<List<DTO>> filterRatings(
             @RequestParam(required = false) Integer ambiance,
             @RequestParam(required = false) Integer food,
+            @RequestParam(required = false) Integer service,
+            @RequestParam(required = false) Integer cleanliness,
+            @RequestParam(required = false) Integer drinks,
             Authentication auth) {
 
-        System.out.println("FILTER HIT — auth=" + auth + ", params → ambiance: " + ambiance + ", food: " + food);
+        System.out.println("FILTER HIT — auth=" + auth +
+                ", params → ambiance=" + ambiance +
+                ", food=" + food +
+                ", service=" + service +
+                ", cleanliness=" + cleanliness +
+                ", drinks=" + drinks);
 
-        List<DTO> dtos = ratingRepo.findByAmbianceAndFood(
-                        ambiance != null ? ambiance : 0,
-                        food != null ? food : 0
-                ).stream()
+        // Create a specification based on the provided parameters
+        Specification<Rating> spec = Specification
+                .where(RatingSpecifications.ambianceEq(ambiance))
+                .and(RatingSpecifications.foodEq(food))
+                .and(RatingSpecifications.serviceEq(service))
+                .and(RatingSpecifications.cleanlinessEq(cleanliness))
+                .and(RatingSpecifications.drinksEq(drinks));
+
+        List<DTO> dtos = ratingRepo.findAll(spec).stream()
                 .map(r -> {
                     DTO d = new DTO();
                     d.setId(r.getId());
@@ -41,29 +57,12 @@ public class AdminController {
                     d.setCleanliness(r.getCleanliness());
                     d.setDrinks(r.getDrinks());
                     return d;
-                }).toList();
+                })
+                .toList();
 
         return ResponseEntity.ok(dtos);
     }
 
-    @GetMapping("/ratings/all")
-    public ResponseEntity<List<DTO>> getAllRatings(Authentication auth) {
-        System.out.println("ALL HIT — auth=" + auth);
-        List<DTO> dtos = ratingRepo.findAll().stream()
-                .map(r -> {
-                    DTO d = new DTO();
-                    d.setId(r.getId());
-                    d.setUserEmail(r.getUser().getEmail());
-                    d.setAmbiance(r.getAmbiance());
-                    d.setFood(r.getFood());
-                    d.setService(r.getService());
-                    d.setCleanliness(r.getCleanliness());
-                    d.setDrinks(r.getDrinks());
-                    return d;
-                }).toList();
-
-        return ResponseEntity.ok(dtos);
-    }
 
     @GetMapping("/report")
     public ResponseEntity<?> report(Authentication auth) {

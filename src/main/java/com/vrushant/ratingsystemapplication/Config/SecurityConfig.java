@@ -26,7 +26,6 @@ public class SecurityConfig {
                 .requestMatchers("/rate").hasAuthority("ROLE_USER") // Requires "USER" authority for /rate
                 .anyRequest().authenticated() // All other requests need to be authenticated
         );
-        // http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll()); // This line is now commented out
 
 
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
